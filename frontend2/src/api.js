@@ -3,7 +3,7 @@ const BASE_URL = 'http://localhost:8080';
 
 // 1. Login (maps to UserLoginController & LoginRequest / LoginResponse)
 export async function loginUser(username, password) {
-    const response = await fetch(`${BASE_URL}/auth/login`, { // Adjust path to match your @PostMapping
+    const response = await fetch(`${BASE_URL}/api/auth/login`, { // Adjust path to match your @PostMapping
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

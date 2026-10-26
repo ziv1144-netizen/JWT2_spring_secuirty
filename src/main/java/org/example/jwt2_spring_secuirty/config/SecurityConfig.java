@@ -1,5 +1,6 @@
 package org.example.jwt2_spring_secuirty.config;
 
+
 import org.example.jwt2_spring_secuirty.security.CustomUserDetailsService;
 import org.example.jwt2_spring_secuirty.security.JwtAuthFilter;
 import org.example.jwt2_spring_secuirty.security.JwtUtil;
@@ -11,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -19,8 +21,22 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.config.Customizer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import java.util.List;
 
 import java.io.IOException;
+import java.util.List;
+
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
 
 @Configuration
 @EnableWebSecurity
@@ -33,7 +49,14 @@ public class SecurityConfig {
     /** The security rules: who may call which URL. */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOrigins(List.of("http://localhost:5173"));
+        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        corsConfig.setAllowCredentials(false);
+        corsConfig.setMaxAge(3600L);
         http
+                .cors(cors -> cors.configurationSource(request -> corsConfig))
                 // No cookies/session -> CSRF attacks are not relevant (token is sent in a header)
                 .csrf(AbstractHttpConfigurer::disable)
 
@@ -63,6 +86,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     /** One-way hash for passwords. BCrypt adds a random salt and is slow on purpose. */
     @Bean

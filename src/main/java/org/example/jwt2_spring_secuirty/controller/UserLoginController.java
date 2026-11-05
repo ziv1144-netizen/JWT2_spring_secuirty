@@ -1,9 +1,6 @@
 package org.example.jwt2_spring_secuirty.controller;
 
-import org.example.jwt2_spring_secuirty.dto.LoginRequest;
-import org.example.jwt2_spring_secuirty.dto.LoginResponse;
-import org.example.jwt2_spring_secuirty.dto.RegisterRequest;
-import org.example.jwt2_spring_secuirty.dto.UserResponse;
+import org.example.jwt2_spring_secuirty.dto.*;
 import org.example.jwt2_spring_secuirty.service.UserLoginService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,5 +29,9 @@ public class UserLoginController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody RegisterRequest request) {
         return userLoginService.register(request);
+    }
+    @PostMapping("/refresh")
+    public String refresh(@Valid @RequestBody RefreshRequest request) {
+        return userLoginService.refresh(request.refreshToken());
     }
 }

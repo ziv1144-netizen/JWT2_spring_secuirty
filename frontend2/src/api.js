@@ -14,10 +14,13 @@ export async function loginUser(username, password) {
     }
 
     const data = await response.json();
+
     // Save the token returned by LoginResponse (adjust 'data.token' if your field is named differently, e.g., 'jwt' or 'accessToken')
     localStorage.setItem('jwt_token', data.token);
+    localStorage.setItem('ref_token', data.reftoken);
     return data;
 }
+
 
 // 2. Register (maps to UserLoginController & RegisterRequest)
 export async function registerUser(registerPayload) {

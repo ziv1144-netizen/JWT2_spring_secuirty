@@ -23,12 +23,16 @@ public class JwtUtil {
     private final SecretKey key;
     @Getter
     private final long expirationMs;
+    @Getter
+    private final long expirationRefMs;
 
     public JwtUtil(@Value("${jwt.secret}") String base64Secret,
-                   @Value("${jwt.expiration-ms}") long expirationMs) {
+                   @Value("${jwt.expiration-ms}") long expirationMs,
+                   @Value("${jwt_ref.expiration-ms}") long expirationRefMs) {
         // Throws WeakKeyException if the secret is shorter than 256 bits
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(base64Secret));
         this.expirationMs = expirationMs;
+        this.expirationRefMs=expirationRefMs;
     }
 
     /** Called after a successful login. */
@@ -43,6 +47,21 @@ public class JwtUtil {
                 .claim("roles", roles)                              // custom claim, for the client to read
                 .issuedAt(now)                                      // "iat"
                 .expiration(new Date(now.getTime() + expirationMs)) // "exp"
+                .signWith(key)                                      // HS256 for a 256-bit key
+                .compact();                                         // header.payload.signature
+    }
+    /** Called after a successful login. */
+    public String generateRefToken(UserDetails userDetails) {
+        Date now = new Date();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        return Jwts.builder()
+                .subject(userDetails.getUsername())                 // "sub"
+
+                .issuedAt(now)                                      // "iat"
+                .expiration(new Date(now.getTime() + expirationRefMs)) // "exp"
                 .signWith(key)                                      // HS256 for a 256-bit key
                 .compact();                                         // header.payload.signature
     }

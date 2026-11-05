@@ -12,10 +12,12 @@ import org.example.jwt2_spring_secuirty.repository.UserRepository;
 import org.example.jwt2_spring_secuirty.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class UserLoginService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserDetailsService userDetailsService;
 
     /**
      * 1. AuthenticationManager checks name + password (throws BadCredentialsException if wrong)
@@ -44,13 +47,29 @@ public class UserLoginService {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtUtil.generateToken(userDetails);
+        String reftoken=jwtUtil.generateRefToken(userDetails);
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
-        return new LoginResponse(token, "Bearer", jwtUtil.getExpirationMs(),
+        return new LoginResponse(token,reftoken, "Bearer", jwtUtil.getExpirationMs(), jwtUtil.getExpirationRefMs(),
                 userDetails.getUsername(), roles);
+    }
+    public String refresh(String reftoken){
+        String username=jwtUtil.extractUsername(reftoken);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if(!userDetails.isEnabled()){
+            throw new DisabledException("user is disabled");
+
+        }
+        return  toAccessToken(userDetails);
+    }
+    private  String toAccessToken(UserDetails userDetails){
+        List<String> roles=userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+        return jwtUtil.generateToken(userDetails);
     }
 
     /** New users always get ROLE_USER only. Admins are never created through this endpoint. */
